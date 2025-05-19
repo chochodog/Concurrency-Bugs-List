@@ -9,14 +9,11 @@ def decrement(shared_number):
         shared_number.value -= 1
 
 if __name__ == '__main__':
-    # 공유 변수 초기화
     shared_number = multiprocessing.Value('i', 0)
 
-    # 프로세스 생성
     p1 = multiprocessing.Process(target=increment, args=(shared_number,))
     p2 = multiprocessing.Process(target=decrement, args=(shared_number,))
 
-    # 프로세스 시작
     p1.start()
     p2.start()
 
