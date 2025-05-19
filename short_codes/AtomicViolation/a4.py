@@ -27,9 +27,7 @@ if __name__ == '__main__':
     for p in processes:
         p.start()
 
-    # 프로세스 종료 대기
     for p in processes:
         p.join()
 
-    # 최종 결과 출력
     print(f"The final state of the first element in the shared_list is {shared_list[0]}")
