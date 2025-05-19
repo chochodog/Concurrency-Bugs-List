@@ -7,7 +7,6 @@ from typing import List, Optional
 import matplotlib.pyplot as plt
 import numpy as np
 
-# Define priority levels
 class Priority(Enum):
     HIGH = 1
     MEDIUM = 2
@@ -36,13 +35,12 @@ class Request:
         return self.completion_time is not None
     
     def __lt__(self, other):
-        # For priority queue comparison (lower number = higher priority)
         return self.priority.value < other.priority.value
 
 class ResourceManager:
     def __init__(self, preemption_enabled=True, starvation_threshold=10.0):
-        self.request_queue = []  # Priority queue
-        self.all_requests = []   # History of all requests
+        self.request_queue = []
+        self.all_requests = []
         self.current_request = None
         self.current_execution_start = 0
         self.time_elapsed = 0
@@ -77,29 +75,27 @@ class ResourceManager:
         """Simulate one time step in the resource allocation system"""
         self.time_elapsed += time_step
         
-        # If a request is currently being processed
         if self.current_request:
             time_spent = self.time_elapsed - self.current_execution_start
-            
-            # Check if the current request is complete
+
             if time_spent >= self.current_request.duration:
                 self.current_request.completion_time = self.time_elapsed
                 print(f"[{self.time_elapsed:.2f}] Request #{self.current_request.id} ({self.current_request.priority}) completed. " +
                       f"Wait time: {self.current_request.wait_time():.2f}, Total time: {self.time_elapsed - self.current_request.creation_time:.2f}")
                 self.current_request = None
             
-            # If preemption is enabled and there are higher priority requests waiting
+
             elif self.preemption_enabled and self.request_queue and self.request_queue[0].priority.value < self.current_request.priority.value:
                 next_request = self.request_queue[0]
                 print(f"[{self.time_elapsed:.2f}] Request #{self.current_request.id} ({self.current_request.priority}) " +
                       f"preempted by #{next_request.id} ({next_request.priority})")
                 
-                # Adjust remaining duration and put back in queue
+
                 self.current_request.duration -= time_spent
                 heapq.heappush(self.request_queue, self.current_request)
                 self.current_request = None
         
-        # If no request is being processed, get the next one
+
         if not self.current_request and self.request_queue:
             self.current_request = heapq.heappop(self.request_queue)
             self.current_request.start_time = self.time_elapsed
@@ -107,7 +103,7 @@ class ResourceManager:
             print(f"[{self.time_elapsed:.2f}] Started processing request #{self.current_request.id} " +
                   f"({self.current_request.priority}). Wait time: {self.current_request.wait_time():.2f}")
         
-        # Check for starving requests
+
         starving = self.check_starvation()
         if starving:
             priorities = {}
@@ -120,17 +116,14 @@ class ResourceManager:
             for priority, count in priorities.items():
                 print(f"  - {priority}: {count} requests")
             
-            # Show the worst case
             worst = max(starving, key=lambda r: self.time_elapsed - r.creation_time)
             print(f"  - Worst case: Request #{worst.id} ({worst.priority}) waiting for {self.time_elapsed - worst.creation_time:.2f} units")
     
     def simulate(self, steps: int, generation_probability: float = 0.3) -> None:
         """Run the simulation for a specified number of steps"""
         for _ in range(steps):
-            # Randomly generate new requests
             if random.random() < generation_probability:
-                # Bias towards high priority requests to demonstrate starvation
-                priority_weights = [0.6, 0.3, 0.1]  # HIGH, MEDIUM, LOW
+                priority_weights = [0.6, 0.3, 0.1]
                 priority = random.choices(list(Priority), weights=priority_weights)[0]
                 duration = random.uniform(1.0, 5.0)
                 self.add_request(priority, duration)
@@ -152,7 +145,6 @@ class ResourceManager:
             "avg_wait_by_priority": {p: 0 for p in Priority}
         }
         
-        # Count by priority and calculate wait times
         wait_times = []
         wait_by_priority = {p: [] for p in Priority}
         
@@ -163,7 +155,6 @@ class ResourceManager:
                 wait_times.append(wait_time)
                 wait_by_priority[req.priority].append(wait_time)
         
-        # Calculate averages
         if wait_times:
             stats["avg_wait_time"] = sum(wait_times) / len(wait_times)
             
@@ -171,7 +162,6 @@ class ResourceManager:
             if wait_by_priority[p]:
                 stats["avg_wait_by_priority"][p] = sum(wait_by_priority[p]) / len(wait_by_priority[p])
         
-        # Identify starvation
         starving = self.check_starvation()
         stats["starving_requests"] = len(starving)
         stats["starving_by_priority"] = {p: 0 for p in Priority}
@@ -188,8 +178,6 @@ class ResourceManager:
             return
         
         plt.figure(figsize=(12, 8))
-        
-        # Plot 1: Wait times by priority
         plt.subplot(2, 2, 1)
         priorities = [p for p in Priority]
         for priority in priorities:
@@ -203,8 +191,6 @@ class ResourceManager:
         plt.ylabel('Wait Time')
         plt.title('Wait Time by Priority')
         plt.legend()
-        
-        # Plot 2: Average wait time by priority
         plt.subplot(2, 2, 2)
         avg_wait = {}
         for priority in priorities:
@@ -220,7 +206,6 @@ class ResourceManager:
             plt.ylabel('Average Wait Time')
             plt.title('Average Wait Time by Priority')
         
-        # Plot 3: Request completion timeline
         plt.subplot(2, 1, 2)
         for req in completed_requests:
             color = 'green' if req.priority == Priority.HIGH else ('orange' if req.priority == Priority.MEDIUM else 'red')
@@ -230,14 +215,12 @@ class ResourceManager:
                      color=color,
                      alpha=0.7)
             
-            # Draw wait time segment
             plt.plot([req.creation_time, req.start_time], 
                      [req.id, req.id], 
                      linewidth=2, 
                      color='blue',
                      alpha=0.5)
             
-            # Draw processing time segment
             plt.plot([req.start_time, req.completion_time], 
                      [req.id, req.id], 
                      linewidth=2, 
@@ -252,7 +235,6 @@ class ResourceManager:
         plt.show()
 
 
-# Example usage
 def run_simple_demo():
     print("=== RESOURCE ALLOCATION SIMULATION ===")
     print("This simulation demonstrates priority-based resource allocation with preemption")
@@ -260,18 +242,12 @@ def run_simple_demo():
     print("This can lead to starvation of low priority requests")
     print("\nRunning simulation with preemption enabled...\n")
     
-    # Create resource manager
     manager = ResourceManager(preemption_enabled=True, starvation_threshold=15.0)
-    
-    # Add some initial requests
     manager.add_request(Priority.LOW, 8.0)
     manager.add_request(Priority.LOW, 6.0)
     manager.add_request(Priority.MEDIUM, 4.0)
-    
-    # Run the simulation
     manager.simulate(50, generation_probability=0.3)
     
-    # Print statistics
     print("\n=== SIMULATION STATISTICS ===")
     stats = manager.generate_statistics()
     print(f"Total requests: {stats['total_requests']}")
@@ -295,19 +271,16 @@ def run_simple_demo():
             if stats['starving_by_priority'][p] > 0:
                 print(f"  - {p}: {stats['starving_by_priority'][p]}")
     
-    # Plot the wait times
     manager.plot_wait_times()
 
 
 def run_comparative_demo():
     """Run a comparative demo showing systems with and without preemption"""
-    # With preemption (will show starvation)
     print("\n=== SIMULATION WITH PREEMPTION (SHOWS STARVATION) ===\n")
     manager1 = ResourceManager(preemption_enabled=True, starvation_threshold=15.0)
     seed = int(time.time())
     random.seed(seed)
     
-    # Add fixed initial requests to demonstrate the problem clearly
     manager1.add_request(Priority.LOW, 5.0)
     manager1.add_request(Priority.LOW, 5.0)
     manager1.add_request(Priority.LOW, 5.0)
@@ -315,12 +288,12 @@ def run_comparative_demo():
     manager1.simulate(50, generation_probability=0.3)
     stats1 = manager1.generate_statistics()
     
-    # Without preemption (fairer but less efficient for high priority)
+
     print("\n=== SIMULATION WITHOUT PREEMPTION (MORE FAIR) ===\n")
     manager2 = ResourceManager(preemption_enabled=False, starvation_threshold=15.0)
-    random.seed(seed)  # Use same seed for fair comparison
+    random.seed(seed)
     
-    # Add same initial requests
+
     manager2.add_request(Priority.LOW, 5.0)
     manager2.add_request(Priority.LOW, 5.0)
     manager2.add_request(Priority.LOW, 5.0)
@@ -328,7 +301,7 @@ def run_comparative_demo():
     manager2.simulate(50, generation_probability=0.3)
     stats2 = manager2.generate_statistics()
     
-    # Print comparison
+
     print("\n=== COMPARISON ===")
     print(f"{'Metric':<25} {'With Preemption':<20} {'Without Preemption':<20}")
     print("-" * 65)
@@ -342,7 +315,7 @@ def run_comparative_demo():
         if wait1 > 0 or wait2 > 0:
             print(f"{'Avg wait - ' + str(p):<25} {wait1:.2f if wait1 > 0 else 'N/A':<20} {wait2:.2f if wait2 > 0 else 'N/A':<20}")
     
-    # Plot for both systems
+
     plt.figure(figsize=(15, 10))
     
     plt.subplot(2, 1, 1)
@@ -377,6 +350,4 @@ def run_comparative_demo():
 
 
 if __name__ == "__main__":
-    # Choose one of these demos to run
     run_simple_demo()
-    # run_comparative_demo()
