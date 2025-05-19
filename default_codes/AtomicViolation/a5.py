@@ -74,9 +74,7 @@ class ThreadManager:
         
         return stats
 
-# Example usage:
 if __name__ == "__main__":
-    # Unsafe version
     counter = ThreadSafeCounter(error_rate=0.1)
     manager = ThreadManager(counter)
     unsafe_results = manager.run_demo(use_safe_method=False)
