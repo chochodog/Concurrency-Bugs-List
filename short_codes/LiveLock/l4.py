@@ -12,46 +12,41 @@ class Philosopher:
     def try_to_eat(self):
         attempts = 0
         while not self.eaten and attempts < 10:
-            # 철학자가 포크를 집으려고 시도
-            print(f"{self.name}이(가) 왼쪽 포크를 집으려고 합니다.")
+            print(f"{self.name} try to pick left fort.")
             if self.left_fork.acquire(blocking=False):
-                print(f"{self.name}이(가) 왼쪽 포크를 집었습니다.")
-                time.sleep(0.1)  # 잠시 기다림
+                print(f"{self.name} pick left fork")
+                time.sleep(0.1)
                 
-                print(f"{self.name}이(가) 오른쪽 포크를 집으려고 합니다.")
+                print(f"{self.name} try to pick right fort.")
                 if self.right_fork.acquire(blocking=False):
-                    print(f"{self.name}이(가) 오른쪽 포크를 집었습니다.")
-                    print(f"{self.name}이(가) 식사를 합니다.")
+                    print(f"{self.name} pick right fork.")
+                    print(f"{self.name} have a meal.")
                     time.sleep(0.5)
                     self.eaten = True
                     self.right_fork.release()
-                    print(f"{self.name}이(가) 오른쪽 포크를 내려놓았습니다.")
+                    print(f"{self.name} drop right fork.")
                 else:
-                    # 오른쪽 포크를 얻지 못했다면, 왼쪽 포크도 내려놓음 (여기서 라이브락 발생)
-                    print(f"{self.name}이(가) 오른쪽 포크를 얻지 못했습니다. 왼쪽 포크를 내려놓습니다.")
+                    print(f"{self.name} didn`t get right fork. he drop left fork.")
                     self.left_fork.release()
-                    time.sleep(random.uniform(0.1, 0.3))  # 무작위 시간 대기 (약간의 불규칙성)
+                    time.sleep(random.uniform(0.1, 0.3))
             else:
-                print(f"{self.name}이(가) 왼쪽 포크를 얻지 못했습니다.")
-                time.sleep(random.uniform(0.1, 0.3))  # 무작위 시간 대기
+                print(f"{self.name} didn`t get left fork.")
+                time.sleep(random.uniform(0.1, 0.3))
             
             attempts += 1
             
         if self.eaten:
-            print(f"{self.name}이(가) 성공적으로 식사를 마쳤습니다.")
+            print(f"{self.name} end having meal successfully.")
         else:
-            print(f"{self.name}이(가) 식사를 하지 못했습니다. 라이브락 상황!")
+            print(f"{self.name} didn`t have a meal. live lock detected!!!")
 
 def simulate_livelock():
-    # 두 포크 생성
     fork1 = threading.Lock()
     fork2 = threading.Lock()
     
-    # 두 철학자 생성
     philosopher1 = Philosopher("철학자1", fork1, fork2)
-    philosopher2 = Philosopher("철학자2", fork2, fork1)  # 주목: 포크 순서가 반대
+    philosopher2 = Philosopher("철학자2", fork2, fork1)
     
-    # 스레드 생성 및 시작
     t1 = threading.Thread(target=philosopher1.try_to_eat)
     t2 = threading.Thread(target=philosopher2.try_to_eat)
     
@@ -62,11 +57,11 @@ def simulate_livelock():
     t2.join()
     
     if not philosopher1.eaten or not philosopher2.eaten:
-        print("라이브락이 발생했습니다!")
+        print("LIVE LOCK!!!")
     else:
-        print("두 철학자 모두 식사를 마쳤습니다!")
+        print("all people finished having a meal")
 
 if __name__ == "__main__":
-    print("라이브락 시뮬레이션 시작")
+    print("simulation start")
     simulate_livelock()
     print("시뮬레이션 종료")
