@@ -34,46 +34,33 @@ class Worker(threading.Thread):
     
     def run(self):
         while self.active:
-            # Try to acquire the first resource
             if self.first_resource.acquire(self.name):
                 try:
-                    # Simulate some work
                     time.sleep(0.1)
-                    
-                    # Try to acquire the second resource
                     print(f"{time.time():.2f}: {self.name} is trying to acquire {self.second_resource.name}")
                     attempt_start = time.time()
                     
-                    # Keep trying to get the second resource with backoff
                     while self.active:
                         if self.second_resource.acquire(self.name):
                             try:
-                                # Update progress time since we successfully got both resources
                                 self.last_progress = time.time()
                                 print(f"{time.time():.2f}: {self.name} has both resources!")
-                                
-                                # Do some work with both resources
                                 time.sleep(0.2)
                                 
                             finally:
-                                # Release the second resource
                                 self.second_resource.release()
                             break
                         
-                        # Wait a bit before retrying (this makes livelock more likely)
                         wait_time = random.uniform(0.1, 0.3)
                         time.sleep(wait_time)
                         
-                        # Check if we've been trying too long (for demonstration)
                         if time.time() - attempt_start > 1.0:
                             print(f"{time.time():.2f}: {self.name} giving up on {self.second_resource.name} temporarily")
                             break
                     
                 finally:
-                    # Always release the first resource
                     self.first_resource.release()
             
-            # Small delay before next attempt
             time.sleep(random.uniform(0.05, 0.1))
 
 
@@ -82,7 +69,6 @@ def detect_livelock(workers, timeout=5):
     start_time = time.time()
     
     while all(worker.is_alive() for worker in workers):
-        # Check if any worker has made progress recently
         current_time = time.time()
         stuck_workers = [w for w in workers if current_time - w.last_progress > timeout]
         
@@ -92,7 +78,6 @@ def detect_livelock(workers, timeout=5):
             print(f"Elapsed time: {current_time - start_time:.2f} seconds")
             print(f"{'='*60}\n")
             
-            # Terminate the workers
             for worker in workers:
                 worker.active = False
             break
@@ -101,24 +86,19 @@ def detect_livelock(workers, timeout=5):
 
 
 def main():
-    # Create the resources
     resource_x = Resource("Resource X")
     resource_y = Resource("Resource Y")
     
-    # Create the workers (threads)
     thread_a = Worker("Thread A", resource_x, resource_y)
     thread_b = Worker("Thread B", resource_y, resource_x)
     
-    # Start the workers
     print("Starting workers...")
     thread_a.start()
     thread_b.start()
     
-    # Start the livelock detection in a separate thread
     detector = threading.Thread(target=detect_livelock, args=([thread_a, thread_b],))
     detector.start()
     
-    # Wait for all threads to complete
     detector.join()
     thread_a.join(timeout=1)
     thread_b.join(timeout=1)
