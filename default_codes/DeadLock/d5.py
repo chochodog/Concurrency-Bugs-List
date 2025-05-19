@@ -32,14 +32,14 @@ class Worker(threading.Thread):
     def acquire_resources(self):
         for resource in self.resources:
             logging.info(f"Worker {self.name} attempting to acquire {resource.name}")
-            resource.lock.acquire()  # 타임아웃 없이 무한 대기로 변경
+            resource.lock.acquire()
             self.resources_held.append(resource)
             resource.is_available = False
             logging.info(f"Worker {self.name} acquired {resource.name}")
 
     def perform_work(self):
         for resource in self.resources_held:
-            time.sleep(1)  # 자원 점유 시간 증가
+            time.sleep(1)
             resource.value += random.randint(-10, 10)
             logging.info(f"Worker {self.name} modified {resource.name} to {resource.value}")
 
@@ -93,13 +93,10 @@ class ResourceManager:
 
 if __name__ == "__main__":
     manager = ResourceManager()
-    
-    # Create resources
     manager.create_resource("CPU", 100)
     manager.create_resource("Memory", 1000)
     manager.create_resource("Disk", 500)
     
-    # Create workers with different resource needs
     manager.create_worker("ProcessA", ["CPU", "Memory"])
     manager.create_worker("ProcessB", ["Memory", "Disk"])
     manager.create_worker("ProcessC", ["CPU", "Disk"])
@@ -108,7 +105,6 @@ if __name__ == "__main__":
     manager.create_worker("ProcessF", ["CPU", "Memory"])
     manager.create_worker("ProcessG", ["Disk", "CPU"])
     
-    # Start simulation
     manager.start_workers()
     manager.monitor_resources(30)
     manager.stop_workers()
