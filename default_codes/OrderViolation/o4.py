@@ -2,9 +2,7 @@ import threading
 import time
 import random
 
-# Shared variable to track payment status
 payment_completed = False
-# Variable to detect order violation
 order_violation_occurred = False
 
 def process_payment():
@@ -12,11 +10,9 @@ def process_payment():
     global payment_completed
     
     print("Starting payment processing...")
-    # Simulate payment processing delay (1-3 seconds)
     processing_time = random.uniform(1, 3)
     time.sleep(processing_time)
     
-    # Mark payment as completed
     payment_completed = True
     print(f"Payment completed successfully after {processing_time:.2f} seconds")
 
@@ -25,11 +21,9 @@ def request_shipping():
     global payment_completed, order_violation_occurred
     
     print("Processing shipping request...")
-    # Simulate a shipping processing delay (0.5-2 seconds)
     shipping_time = random.uniform(0.5, 2)
     time.sleep(shipping_time)
     
-    # Check payment status
     if payment_completed:
         print(f"Payment verified. Order is being shipped after {shipping_time:.2f} seconds")
     else:
@@ -48,28 +42,22 @@ def run_simulation():
     """Runs a single simulation of the payment and shipping process."""
     global payment_completed, order_violation_occurred
     
-    # Reset global variables for each run
     payment_completed = False
     order_violation_occurred = False
     
     print("\n===== Starting New Simulation =====")
     
-    # Create threads
     payment_thread = threading.Thread(target=process_payment)
     shipping_thread = threading.Thread(target=request_shipping)
     
-    # Start both threads simultaneously
     payment_thread.start()
     shipping_thread.start()
     
-    # Wait for both threads to complete
     payment_thread.join()
     shipping_thread.join()
     
-    # Check for order violation
     detect_order_violation()
 
-# Run multiple simulations to demonstrate the race condition
 if __name__ == "__main__":
     print("E-COMMERCE ORDER PROCESSING SIMULATION")
     print("This program demonstrates a race condition where shipping might occur before payment")
