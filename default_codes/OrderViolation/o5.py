@@ -7,7 +7,6 @@ from dataclasses import dataclass
 from queue import Queue
 from contextlib import contextmanager
 
-# Configure logging
 logging.basicConfig(
     level=logging.INFO,
     format='%(asctime)s - %(threadName)s - %(levelname)s - %(message)s'
@@ -44,7 +43,7 @@ class DataProcessor:
     def initialize_data(self):
         try:
             with self.lock, self.timed_operation("Data initialization"):
-                time.sleep(5)  # 초기화를 더 지연
+                time.sleep(5)
                 self.data.update({
                     'key': 'value',
                     'timestamp': time.time(),
@@ -85,7 +84,7 @@ class DataProcessor:
                 logging.error(f"Error processing data: {e}")
                 retry_count += 1
                 self.stats.failed_processes += 1
-                time.sleep(1)  # Back off before retry
+                time.sleep(1)
 
         return False
 
@@ -111,11 +110,9 @@ class DataProcessor:
         logging.info("Initiating shutdown sequence")
         self.shutdown_flag.set()
         
-        # Signal workers to stop
         for _ in self._worker_threads:
             self.processing_queue.put(None)
         
-        # Wait for workers to finish
         for thread in self._worker_threads:
             thread.join()
         
@@ -135,12 +132,10 @@ class DataProcessor:
         self.stats.start_time = time.time()
         self.start_workers()
 
-        # 작업을 먼저 큐에 추가
         for _ in range(num_processes):
             self.processing_queue.put(True)
             self.stats.total_processes += 1
 
-        # 초기화 시작
         init_thread = threading.Thread(target=self.initialize_data)
         init_thread.start()
 
