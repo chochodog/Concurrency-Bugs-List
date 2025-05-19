@@ -19,7 +19,6 @@ class BankSys:
         self.simulation_complete = threading.Event()
 
     def random_delay(self, max_delay=2):
-        # Probabilistic delay to increase deadlock likelihood
         if random.random() < self.deadlock_probability:
             time.sleep(random.uniform(1, max_delay))
 
@@ -66,7 +65,6 @@ class BankSys:
         thread_a.start()
         thread_b.start()
 
-        # Wait for simulation with timeout
         if not self.simulation_complete.wait(timeout):
             print("Potential Deadlock Detected!")
 
@@ -74,7 +72,6 @@ class BankSys:
         thread_b.join(timeout)
 
 if __name__ == "__main__":
-    # Run multiple simulations to demonstrate probabilistic behavior
     for i in range(5):
         print(f"\n--- Simulation {i+1} ---")
         simulation = BankSys(deadlock_probability=0.4)
