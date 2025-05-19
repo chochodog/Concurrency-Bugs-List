@@ -76,7 +76,6 @@ class Worker:
         while self.active and self.tasks_completed < max_tasks:
             self.status = WorkerStatus.WAITING
             
-            # Wait for the other worker to become inactive
             if other_worker.is_active():
                 print(f"{self.name} [{self.status}] is waiting for {other_worker.get_name()} " 
                       f"[{other_worker.get_status()}] to become inactive.")
@@ -85,7 +84,6 @@ class Worker:
             
             self.status = WorkerStatus.WORKING
             
-            # Perform work and update shared resource
             with self.lock:
                 task_result = self.perform_task()
                 print(f"{self.name} [{self.status}]: {task_result}")
@@ -97,7 +95,6 @@ class Worker:
                     print(f"{self.name} activates the shared resource.")
                     shared_resource.set_active(True, self.name)
                 
-                # Switch worker states
                 self.active = False
                 other_worker.active = True
         
@@ -125,13 +122,11 @@ def main():
     
     workers = [worker1, worker2]
     
-    # Create monitoring thread
     monitor_thread = threading.Thread(
         target=monitor_resource, 
         args=(shared_resource, workers)
     )
     
-    # Create worker threads
     thread1 = threading.Thread(
         target=worker1.work, 
         args=(shared_resource, worker2)
@@ -141,13 +136,11 @@ def main():
         args=(shared_resource, worker1)
     )
     
-    # Start all threads
     monitor_thread.daemon = True
     monitor_thread.start()
     thread1.start()
     thread2.start()
-    
-    # Wait for worker threads to complete
+
     thread1.join()
     thread2.join()
 
