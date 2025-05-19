@@ -17,9 +17,7 @@ if __name__ == '__main__':
     p1.start()
     p2.start()
 
-    # 프로세스 종료 대기
     p1.join()
     p2.join()
 
-    # 최종 결과 출력
     print(f"The final value of shared_number is {shared_number.value}")
