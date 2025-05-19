@@ -26,7 +26,6 @@ threads = [threading.Thread(target=worker, args=(counter,)) for _ in range(10)]
 for thread in threads:
     thread.start()
 
-# 모든 스레드가 종료될 때까지 대기
 for thread in threads:
     thread.join()
 
