@@ -30,7 +30,6 @@ public class l1 {
 
         public void work(SharedResource sharedResource, Worker otherWorker) {
             while (active) {
-                // Wait for the other worker to become inactive
                 if (otherWorker.isActive()) {
                     System.out.println(name + " is waiting for " + otherWorker.getName() + " to become inactive.");
                     try {
@@ -41,7 +40,6 @@ public class l1 {
                     continue;
                 }
 
-                // If the shared resource is active, this worker becomes inactive and vice versa.
                 if (sharedResource.isActive()) {
                     System.out.println(name + " sets the shared resource to inactive.");
                     sharedResource.setActive(false);
@@ -50,7 +48,6 @@ public class l1 {
                     sharedResource.setActive(true);
                 }
 
-                // This worker becomes inactive and lets the other worker work.
                 this.active = false;
                 otherWorker.active = true;
             }
