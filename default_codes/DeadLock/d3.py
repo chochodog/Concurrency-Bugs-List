@@ -23,24 +23,19 @@ class Transaction(threading.Thread):
         self.manager = manager
     
     def run(self):
-        # Increase deadlock probability by selecting more records and randomizing lock order
         num_records = random.randint(2, 5)
         selected_records = random.sample(self.manager.records, num_records)
-        
-        # Shuffle records to increase deadlock chance
         random.shuffle(selected_records)
 
         logging.info(f"Transaction {self.transaction_id} attempting to lock records: {[r.record_id for r in selected_records]}")
 
         try:
-            # Acquire locks with high potential for circular wait
             for record in selected_records:
-                # Introduce longer hold times and higher contention
                 if not record.lock.acquire(timeout=0.5):
                     logging.info(f"Transaction {self.transaction_id} couldn't acquire lock")
                     return
                 
-                time.sleep(random.uniform(0.1, 0.3))  # Increased processing time
+                time.sleep(random.uniform(0.1, 0.3))
                 record.value += random.randint(1, 5)
                 logging.info(f"Transaction {self.transaction_id} modified record {record.record_id}")
         
@@ -48,7 +43,6 @@ class Transaction(threading.Thread):
             logging.error(f"Transaction {self.transaction_id} error: {e}")
         
         finally:
-            # Release locks
             for record in reversed(selected_records):
                 record.lock.release()
         
