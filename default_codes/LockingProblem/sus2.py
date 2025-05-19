@@ -4,13 +4,10 @@ import random
 from collections import defaultdict
 import statistics
 
-# In-memory "database"
 database = {'record1': {'value': 0, 'last_updated_by': None}}
 
-# Lock for the specific record
 record_lock = threading.Lock()
 
-# Statistics tracking
 access_attempts = []
 wait_times = defaultdict(list)
 lock_acquisition_times = defaultdict(list)
@@ -31,9 +28,8 @@ def read_record(record_id, thread_name):
         
         print(f"[{time.time():.4f}] {thread_name}: Acquired lock for READ after waiting {wait_time:.4f}s")
         
-        # Simulate database read operation
         operation_start = time.time()
-        time.sleep(random.uniform(0.01, 0.05))  # Simulated read time
+        time.sleep(random.uniform(0.01, 0.05))
         
         result = database[record_id].copy()
         
@@ -61,11 +57,9 @@ def update_record(record_id, new_value, thread_name):
         
         print(f"[{time.time():.4f}] {thread_name}: Acquired lock for UPDATE after waiting {wait_time:.4f}s")
         
-        # Simulate database update operation
         operation_start = time.time()
-        time.sleep(random.uniform(0.05, 0.2))  # Simulated write time (longer than reads)
+        time.sleep(random.uniform(0.05, 0.2))
         
-        # Read current value and update
         current = database[record_id]['value']
         database[record_id] = {
             'value': new_value,
@@ -85,20 +79,15 @@ def user_workflow(user_id):
     """Simulate a user's interaction with the database."""
     thread_name = f"User-{user_id}"
     
-    # Simulate thinking time before first operation
     time.sleep(random.uniform(0, 0.5))
     
-    # First read the record
     record = read_record('record1', thread_name)
     
-    # Simulate some processing time
     time.sleep(random.uniform(0.1, 0.3))
     
-    # Update with a new value
     new_value = record['value'] + 1
     update_record('record1', new_value, thread_name)
     
-    # Sometimes do a second read to verify
     if random.random() > 0.5:
         time.sleep(random.uniform(0.05, 0.15))
         read_record('record1', thread_name)
@@ -109,10 +98,8 @@ def analyze_statistics():
     print("SIMULATION STATISTICS")
     print("="*80)
     
-    # Sort access attempts chronologically
     sorted_attempts = sorted(access_attempts, key=lambda x: x[2])
     
-    # Calculate overall statistics
     all_wait_times = [time for user_times in wait_times.values() for time in user_times]
     
     if all_wait_times:
@@ -123,33 +110,28 @@ def analyze_statistics():
         if len(all_wait_times) > 1:
             print(f"  Standard deviation: {statistics.stdev(all_wait_times):.4f}s")
     
-    # Analyze lock acquisition sequence
     print("\nLock Acquisition Sequence:")
     for i, (thread, operation, _) in enumerate(sorted_attempts):
         next_idx = i + 1
         if next_idx < len(sorted_attempts):
             next_thread, next_op, next_time = sorted_attempts[next_idx]
-            if thread != next_thread:  # Lock transferred between threads
+            if thread != next_thread:
                 acquisition_time = lock_acquisition_times[next_thread][0]
                 wait_time = wait_times[next_thread][0]
                 print(f"  {thread} ({operation}) → {next_thread} ({next_op}) - Wait: {wait_time:.4f}s")
-                
-                # Remove the first elements since we've processed them
                 lock_acquisition_times[next_thread].pop(0)
                 wait_times[next_thread].pop(0)
     
-    # Contention analysis
     print("\nLock Contention Analysis:")
-    high_wait_times = [t for t in all_wait_times if t > 0.1]  # Considering >0.1s as high wait time
+    high_wait_times = [t for t in all_wait_times if t > 0.1]
     if high_wait_times:
         print(f"  Number of high wait times (>0.1s): {len(high_wait_times)}")
         print(f"  Average high wait time: {statistics.mean(high_wait_times):.4f}s")
         
-        # Find when contention was highest
+
         contention_points = []
         for i in range(len(sorted_attempts)):
             current_time = sorted_attempts[i][2]
-            # Count number of threads waiting around the same time
             waiting_threads = sum(1 for j in range(len(sorted_attempts)) 
                                 if i != j and abs(sorted_attempts[j][2] - current_time) < 0.1)
             if waiting_threads > 0:
@@ -159,7 +141,6 @@ def analyze_statistics():
             max_contention = max(contention_points, key=lambda x: x[1])
             print(f"  Peak contention: {max_contention[1]} threads at time {max_contention[0]:.4f}s")
     
-    # Final database state
     print(f"\nFinal Database State: {database}")
 
 def main():
@@ -171,22 +152,19 @@ def main():
     print(f"Initial database state: {database}")
     print("="*80)
     
-    # Create and start threads
     threads = []
     for i in range(num_users):
         thread = threading.Thread(target=user_workflow, args=(i+1,))
         threads.append(thread)
         thread.start()
     
-    # Wait for all threads to complete
     for thread in threads:
         thread.join()
     
     simulation_time = time.time() - simulation_start
     print("\n" + "="*80)
     print(f"Simulation completed in {simulation_time:.4f} seconds")
-    
-    # Analyze the simulation results
+
     analyze_statistics()
 
 if __name__ == "__main__":
