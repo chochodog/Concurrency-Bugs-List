@@ -14,7 +14,6 @@ class ResourcePool:
         self.lock = threading.Lock()
         self.wait_times = []
         
-        # Initialize the resource pool
         for i in range(pool_size):
             self.resources.put(f"resource-{i}")
     
@@ -28,7 +27,6 @@ class ResourcePool:
             self.wait_times.append(wait_duration)
             print(f"[{datetime.now().strftime('%H:%M:%S.%f')[:-3]}] Worker {worker_id} acquired resource lock after {wait_duration:.6f}s")
             
-            # Now wait for an available resource
             resource_wait_start = time.time()
             resource = self.resources.get(block=True)
             resource_wait_duration = time.time() - resource_wait_start
@@ -57,15 +55,12 @@ class ResourcePool:
 def process_request(worker_id, resource_pool, request_complexity):
     """Simulates processing a web request"""
     try:
-        # Acquire a resource
         resource, wait_time = resource_pool.acquire_resource(worker_id)
         
-        # Simulate request processing (more complex requests take longer)
         processing_time = request_complexity * random.uniform(0.1, 0.5)
         print(f"[{datetime.now().strftime('%H:%M:%S.%f')[:-3]}] Worker {worker_id} processing request (complexity: {request_complexity}) with {resource}")
         time.sleep(processing_time)
         
-        # Release the resource
         resource_pool.release_resource(resource, worker_id)
         
         return {
@@ -92,45 +87,36 @@ def simulate_web_server(num_workers, num_resources, num_requests, traffic_patter
     print(f"SIMULATION: {num_workers} workers, {num_resources} resources, {num_requests} requests, {traffic_pattern} traffic")
     print(f"{'='*80}\n")
     
-    # Create resource pool
     resource_pool = ResourcePool(num_resources)
     
-    # Create request queue
     requests = []
     
     if traffic_pattern == "uniform":
-        # Uniform distribution of request complexity
         for i in range(num_requests):
             complexity = random.uniform(1, 3)
             requests.append(complexity)
-    else:  # "burst" pattern
-        # Initial light load
+    else:
         for i in range(num_requests // 3):
             complexity = random.uniform(1, 2)
             requests.append(complexity)
         
-        # Sudden burst of complex requests
         for i in range(num_requests // 3):
             complexity = random.uniform(2.5, 4)
             requests.append(complexity)
             
-        # Return to normal load
         for i in range(num_requests - len(requests)):
             complexity = random.uniform(1, 2)
             requests.append(complexity)
     
-    # Process all requests using thread pool
     start_time = time.time()
     results = []
     
     with ThreadPoolExecutor(max_workers=num_workers) as executor:
-        # Submit all tasks
         futures = []
         for req_id, complexity in enumerate(requests):
             future = executor.submit(process_request, req_id, resource_pool, complexity)
             futures.append(future)
         
-        # Get results as they complete
         for future in futures:
             result = future.result()
             if result:
@@ -138,12 +124,10 @@ def simulate_web_server(num_workers, num_resources, num_requests, traffic_patter
     
     total_simulation_time = time.time() - start_time
     
-    # Display results
     print(f"\n{'='*80}")
     print(f"SIMULATION COMPLETED in {total_simulation_time:.2f} seconds")
     print(f"{'='*80}")
     
-    # Lock acquisition statistics
     lock_stats = resource_pool.get_wait_statistics()
     print("\nLock Acquisition Statistics:")
     print(f"  Minimum wait time: {lock_stats['min']:.6f}s")
@@ -152,7 +136,6 @@ def simulate_web_server(num_workers, num_resources, num_requests, traffic_patter
     print(f"  Median wait time: {lock_stats['median']:.6f}s")
     print(f"  Total lock acquisitions: {lock_stats['total_acquisitions']}")
     
-    # Calculate request processing statistics
     if results:
         wait_times = [r["wait_time"] for r in results]
         processing_times = [r["processing_time"] for r in results]
@@ -167,9 +150,7 @@ def simulate_web_server(num_workers, num_resources, num_requests, traffic_patter
     
     print(f"\nResource Utilization: {len(results) / num_resources / total_simulation_time:.2f} requests per resource per second")
 
-# Run simulations with different configurations to demonstrate suspension-based locking issues
 if __name__ == "__main__":
-    # Scenario 1: Balanced load (enough resources)
     simulate_web_server(
         num_workers=10,
         num_resources=8,
@@ -177,7 +158,6 @@ if __name__ == "__main__":
         traffic_pattern="uniform"
     )
     
-    # Scenario 2: Resource contention (not enough resources)
     simulate_web_server(
         num_workers=20,
         num_resources=5,
@@ -185,7 +165,6 @@ if __name__ == "__main__":
         traffic_pattern="uniform"
     )
     
-    # Scenario 3: Bursty traffic with limited resources (worst case)
     simulate_web_server(
         num_workers=25,
         num_resources=4,
