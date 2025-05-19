@@ -7,35 +7,26 @@ from typing import List
 class UnsafeLogger:
     def __init__(self, filename: str):
         self.filename = filename
-        # Intentionally create/clear the file
         Path(filename).write_text("")
     
     def write_log(self, message: str):
-        # Deliberately make the write operation susceptible to race conditions
-        # by breaking it into multiple steps
         with open(self.filename, 'r') as file:
             current_content = file.read()
             
-        # Simulate some processing time to increase race condition probability
         time.sleep(0.001)
         
-        # Format the message
         new_content = current_content + message + "\n"
         
-        # Another delay before writing
         time.sleep(0.001)
         
-        # Write the content back
         with open(self.filename, 'w') as file:
             file.write(new_content)
 
 def worker(logger: UnsafeLogger, worker_id: int, num_messages: int):
     """Worker function that writes multiple log messages"""
     for msg_num in range(num_messages):
-        # Create a message with a known format to help identify issues
         message = f"Worker-{worker_id} Message-{msg_num}: " + "X" * random.randint(3, 10)
         logger.write_log(message)
-        # Small random delay between messages
         time.sleep(random.uniform(0.001, 0.003))
 
 def verify_log_file(filename: str, num_workers: int, messages_per_worker: int) -> tuple:
@@ -60,12 +51,10 @@ def verify_log_file(filename: str, num_workers: int, messages_per_worker: int) -
         if not line:
             continue
             
-        # Check for corrupted format
         if not line.startswith("Worker-") or "Message-" not in line:
             corrupted_lines += 1
             continue
             
-        # Extract the worker and message identifier
         try:
             msg_id = line.split(":")[0].strip()
             if msg_id in found_messages:
@@ -88,11 +77,9 @@ def main():
     print(f"- Expected total messages: {expected_total}")
     print("\nExecuting...\n")
     
-    # Create logger and worker threads
     logger = UnsafeLogger(log_file)
     threads: List[threading.Thread] = []
     
-    # Start all worker threads
     for worker_id in range(num_workers):
         thread = threading.Thread(
             target=worker,
@@ -101,11 +88,9 @@ def main():
         threads.append(thread)
         thread.start()
     
-    # Wait for all threads to complete
     for thread in threads:
         thread.join()
     
-    # Analyze the results
     total_messages, duplicates, corrupted = verify_log_file(
         log_file, num_workers, messages_per_worker
     )
