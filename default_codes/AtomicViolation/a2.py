@@ -4,7 +4,6 @@ import random
 
 class InventorySystem:
     def __init__(self):
-        # Initialize inventory with product IDs and quantities
         self.inventory = {
             "product_a": 1000,
             "product_b": 500,
@@ -16,23 +15,12 @@ class InventorySystem:
         Update the inventory for a specific product.
         This function simulates a non-atomic operation by breaking it down into steps.
         """
-        # Step 1: Read the current inventory level
         current_quantity = self.inventory[product_id]
-        
-        # Simulate some processing time that might occur in a real system
-        # This increases the chance of an atomic violation occurring
         time.sleep(random.uniform(0.001, 0.005))
-        
-        # Step 2: Calculate the new inventory level
         new_quantity = current_quantity + change_amount
-        
-        # More simulated processing time
         time.sleep(random.uniform(0.001, 0.005))
-        
-        # Step 3: Write the new value back to the inventory
         self.inventory[product_id] = new_quantity
         
-        # Log the operation for demonstration purposes
         print(f"Thread {threading.current_thread().name}: Updated {product_id} by {change_amount}, " 
               f"Expected: {current_quantity + change_amount}, Set to: {new_quantity}")
 
@@ -40,7 +28,6 @@ class InventorySystem:
 def simulate_user_activity(inventory_system, product_id, num_operations):
     """Simulate a user performing multiple inventory updates."""
     for _ in range(num_operations):
-        # Randomly decide whether to increase or decrease inventory
         change_amount = random.choice([-5, -3, -1, 1, 3, 5])
         inventory_system.update_inventory(product_id, change_amount)
 
@@ -50,14 +37,10 @@ def run_simulation(num_users, operations_per_user):
     inventory = InventorySystem()
     target_product = "product_a"
     
-    # Record the initial state
     initial_quantity = inventory.inventory[target_product]
     print(f"\nSIMULATION START: {target_product} initial quantity: {initial_quantity}")
     
-    # Calculate expected final quantity for verification
     expected_changes = []
-    
-    # Create and start multiple threads to simulate concurrent users
     threads = []
     for i in range(num_users):
         thread = threading.Thread(
@@ -67,25 +50,20 @@ def run_simulation(num_users, operations_per_user):
         )
         threads.append(thread)
     
-    # Start all threads
     for thread in threads:
         thread.start()
     
-    # Wait for all threads to complete
     for thread in threads:
         thread.join()
     
-    # Record the final state
     final_quantity = inventory.inventory[target_product]
     
-    # Get the actual change from log entries
     total_reported_changes = 0
     for line in logged_changes:
         if "Updated product_a by" in line:
             change = int(line.split("by ")[1].split(",")[0])
             total_reported_changes += change
     
-    # Print results and analysis
     print(f"\nSIMULATION COMPLETE")
     print(f"Initial quantity: {initial_quantity}")
     print(f"Final quantity: {final_quantity}")
@@ -101,7 +79,6 @@ def run_simulation(num_users, operations_per_user):
         print("\nNo atomic violation detected in this run. Try running again with more threads.")
 
 
-# Capture log output for analysis
 logged_changes = []
 original_print = print
 
@@ -112,17 +89,14 @@ def log_print(*args, **kwargs):
 
 print = log_print
 
-# Run the simulation
 if __name__ == "__main__":
     print("===== INVENTORY ATOMIC VIOLATION SIMULATION =====")
     print("This simulation demonstrates how concurrent inventory updates")
     print("without proper synchronization can lead to data inconsistencies.\n")
     
-    # Configure simulation parameters
-    NUM_USERS = 10          # Number of concurrent users
-    OPERATIONS_PER_USER = 5  # Operations each user performs
+    NUM_USERS = 10          
+    OPERATIONS_PER_USER = 5  
     
-    # Execute simulation
     run_simulation(NUM_USERS, OPERATIONS_PER_USER)
     
     print("\n===== EXPLANATION =====")
