@@ -6,11 +6,8 @@ import datetime
 
 class ChatRoom:
     def __init__(self):
-        # The message log represents our shared resource
         self.message_log = []
-        # We'll use this queue to collect messages in their "intended" order
         self.intended_order = Queue()
-        # Track if messages experienced atomic violations
         self.atomic_violations = []
     
     def send_message(self, user_id, message_content):
@@ -21,20 +18,15 @@ class ChatRoom:
         Without proper synchronization, atomic violations can occur here
         as multiple threads interact with the shared message_log.
         """
-        # Record the intended order of this message
         timestamp = datetime.datetime.now().strftime("%H:%M:%S.%f")
         intended_position = self.intended_order.qsize()
         self.intended_order.put((user_id, message_content, timestamp, intended_position))
         
-        # Simulate some processing time (could be network delay, etc.)
         processing_time = random.uniform(0.01, 0.1)
         time.sleep(processing_time)
         
-        # ATOMIC VIOLATION RISK: The next three operations should be atomic but aren't
-        # 1. Check current message log length
         current_position = len(self.message_log)
         
-        # 2. Create new message entry
         message_entry = {
             "user_id": user_id,
             "content": message_content,
@@ -43,16 +35,11 @@ class ChatRoom:
             "actual_position": current_position
         }
         
-        # Simulate additional processing time between reading the position and writing
-        # This increases the chance of atomic violations
+
         time.sleep(random.uniform(0.005, 0.02))
         
-        # 3. Append to the message log
-        # Between steps 1 and 3, another thread might have already appended a message,
-        # causing current_position to be incorrect
         self.message_log.append(message_entry)
         
-        # Track if message experienced an atomic violation
         is_violation = intended_position != current_position
         self.atomic_violations.append(is_violation)
         
@@ -67,7 +54,6 @@ class ChatRoom:
             if msg["intended_position"] != idx:
                 print(f"   ATOMIC VIOLATION! Intended position: {msg['intended_position']}, Actual: {idx}")
         
-        # Calculate statistics
         total_messages = len(self.message_log)
         violations = sum(1 for msg in self.message_log if msg["intended_position"] != msg["actual_position"])
         print(f"\n==== STATISTICS ====")
@@ -75,7 +61,6 @@ class ChatRoom:
         print(f"Atomic violations: {violations} ({violations/total_messages*100:.1f}% of messages)")
         print(f"Correctly ordered: {total_messages - violations} ({(total_messages - violations)/total_messages*100:.1f}% of messages)")
         
-        # Check if all intended messages were delivered
         if self.intended_order.qsize() > 0:
             print(f"WARNING: {self.intended_order.qsize()} messages were not delivered!")
 
@@ -85,7 +70,6 @@ def user_simulation(user_id, chat_room, num_messages):
         message = f"Message {i+1} from User {user_id}"
         chat_room.send_message(user_id, message)
         
-        # Random delay between messages
         time.sleep(random.uniform(0.05, 0.2))
 
 def run_simulation(num_users=5, messages_per_user=5):
@@ -100,7 +84,6 @@ def run_simulation(num_users=5, messages_per_user=5):
     print("Each user runs in a separate thread, attempting to send messages concurrently.")
     print("Without proper synchronization, atomic violations will occur.")
     
-    # Create and start user threads
     for user_id in range(1, num_users + 1):
         thread = threading.Thread(
             target=user_simulation,
@@ -109,14 +92,11 @@ def run_simulation(num_users=5, messages_per_user=5):
         threads.append(thread)
         thread.start()
     
-    # Wait for all threads to complete
     for thread in threads:
         thread.join()
     
-    # Display the final message log
     chat_room.display_messages()
     
-    # Show examples of atomic violations
     violated_messages = [(idx, msg) for idx, msg in enumerate(chat_room.message_log) 
                          if msg["intended_position"] != idx]
     
@@ -142,9 +122,7 @@ def run_simulation(num_users=5, messages_per_user=5):
     print("and a broken chat experience for users.")
 
 if __name__ == "__main__":
-    # Run the simulation with default parameters
     run_simulation()
     
-    # Optional: Run with higher concurrency to demonstrate more violations
     print("\n\nRunning high-concurrency simulation to demonstrate more violations...")
     run_simulation(num_users=10, messages_per_user=10)
