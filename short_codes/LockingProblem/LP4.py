@@ -14,7 +14,6 @@ class BankAccount:
         print(f"Customer {customer_id}: Requesting transfer of ${amount}...")
         start_time = time.time()
         
-        # Try to lock the account
         self.lock.acquire()
         wait_time = time.time() - start_time
         self.access_times.append(wait_time)
@@ -22,10 +21,8 @@ class BankAccount:
         try:
             print(f"Customer {customer_id}: Processing transfer (wait: {wait_time:.2f}s)")
             
-            # Simulate processing time (verification, authorization, etc.)
             time.sleep(processing_time)
             
-            # Execute transfer
             if self.balance >= amount:
                 self.balance -= amount
                 destination.balance += amount
@@ -38,41 +35,33 @@ class BankAccount:
         
         return wait_time
 
-# Run simulation
 if __name__ == "__main__":
-    # Create accounts
     account1 = BankAccount("A001")
     account2 = BankAccount("A002")
     
-    # Create threads for different customers
     threads = []
-    
-    # One customer doing a complex transaction (takes long time)
+
     complex_txn = threading.Thread(
         target=account1.transfer,
-        args=(200, account2, "VIP-Customer", 3.0)  # Complex transaction takes 3 seconds
+        args=(200, account2, "VIP-Customer", 3.0)
     )
     threads.append(complex_txn)
     
-    # Regular customers doing simple transactions
     for i in range(5):
         t = threading.Thread(
             target=account1.transfer,
-            args=(50, account2, f"Regular-{i}", 0.2)  # Regular transactions take 0.2 seconds
+            args=(50, account2, f"Regular-{i}", 0.2)
         )
         threads.append(t)
     
-    # Start all threads with slight delay for predictable ordering
     print("=== Starting Bank Simulation ===")
     for t in threads:
         t.start()
         time.sleep(0.05)
-    
-    # Wait for all transactions to complete
+
     for t in threads:
         t.join()
     
-    # Print statistics
     print("\n=== Transaction Statistics ===")
     print(f"Average wait time: {sum(account1.access_times)/len(account1.access_times):.2f}s")
     print(f"Maximum wait time: {max(account1.access_times):.2f}s")
