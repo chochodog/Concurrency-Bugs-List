@@ -11,13 +11,13 @@ def log(message):
 def writer():
     global shared_data
     log("[Writer] Writing data...")
-    time.sleep(1)  # 기존 2초에서 1초로 줄여서 순서위반 확률 감소
+    time.sleep(1)
     with lock:
         shared_data = "Important Data"
     log("[Writer] Finished writing.")
 
 def reader():
-    time.sleep(1)  # 기존 1초에서 2초로 늘려서 writer가 먼저 실행될 가능성 증가
+    time.sleep(1)
     with lock:
         if shared_data is None:
             log("[Reader] WARNING: Attempted to read before data was written!")
@@ -26,14 +26,14 @@ def reader():
 
 def extra_writer():
     global shared_data
-    time.sleep(3)  # 기존 writer 이후 실행되도록 조정
+    time.sleep(3)
     log("[Extra Writer] Modifying data...")
     with lock:
         shared_data = "Updated Data"
     log("[Extra Writer] Finished modifying data.")
 
 def extra_reader():
-    time.sleep(3)  # extra_writer 이후 실행되도록 조정
+    time.sleep(3)
     with lock:
         if shared_data is None:
             log("[Extra Reader] WARNING: Attempted to read before data was written!")
