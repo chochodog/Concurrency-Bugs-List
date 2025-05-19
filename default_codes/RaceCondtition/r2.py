@@ -7,11 +7,9 @@ class Counter:
         self.count = 0
     
     def increment(self):
-        # Deliberately make the race condition more likely by breaking
-        # the increment operation into multiple steps
-        current = self.count  # Read
-        time.sleep(0.0001)   # Simulate some processing time
-        self.count = current + 1  # Write
+        current = self.count
+        time.sleep(0.0001)
+        self.count = current + 1
 
 def worker(counter: Counter, iterations: int):
     """Worker function that increments the counter multiple times"""
@@ -26,7 +24,6 @@ def run_experiment(num_threads: int, iterations_per_thread: int) -> int:
     counter = Counter()
     threads: List[threading.Thread] = []
     
-    # Create and start threads
     for _ in range(num_threads):
         thread = threading.Thread(
             target=worker,
@@ -35,7 +32,6 @@ def run_experiment(num_threads: int, iterations_per_thread: int) -> int:
         threads.append(thread)
         thread.start()
     
-    # Wait for all threads to complete
     for thread in threads:
         thread.join()
     
@@ -52,7 +48,6 @@ def main():
     print(f"- Expected final count: {expected_count}")
     print("\nExecuting...\n")
     
-    # Run multiple trials to demonstrate the inconsistency
     for trial in range(3):
         final_count = run_experiment(num_threads, iterations_per_thread)
         missing_counts = expected_count - final_count
