@@ -1,61 +1,57 @@
 import random
 import time
 
-class 식당시스템:
+class restaurant:
     def __init__(self):
-        self.주문목록 = []
-        self.조리중 = []
-        self.완료 = []
+        self.OrderList = []
+        self.Cooking = []
+        self.finish = []
     
-    def 주문접수(self, 메뉴):
-        주문번호 = len(self.주문목록) + 1
-        self.주문목록.append((주문번호, 메뉴))
-        print(f"[주문접수] 주문번호 {주문번호}: {메뉴}")
-        return 주문번호
+    def OrderRecieved(self, menu):
+        OrderNumber = len(self.OrderList) + 1
+        self.OrderList.append((OrderNumber, menu))
+        print(f"[OrderRecieved] OrderNumber {OrderNumber}: {menu}")
+        return OrderNumber
     
-    def 요리시작(self):
-        if not self.주문목록:
+    def startCooking(self):
+        if not self.OrderList:
             return False
         
-        # 무작위로 주문 선택 (순서 위반 발생)
-        선택_인덱스 = random.randint(0, len(self.주문목록)-1)
-        주문번호, 메뉴 = self.주문목록.pop(선택_인덱스)
+        choice_index = random.randint(0, len(self.OrderList)-1)
+        OrderNumber, menu = self.OrderList.pop(choice_index)
         
-        self.조리중.append((주문번호, 메뉴))
-        print(f"[조리시작] 주문번호 {주문번호}: {메뉴} - 순서 위반 가능성 있음!")
+        self.Cooking.append((OrderNumber, menu))
+        print(f"[startCooking] OrderNumber {OrderNumber}: {menu} - there is possibility of Order Violation!!")
         return True
     
-    def 요리완료(self):
-        if not self.조리중:
+    def cookingfinish(self):
+        if not self.Cooking:
             return False
         
-        # 무작위로 조리 완료 선택 (순서 위반 발생)
-        선택_인덱스 = random.randint(0, len(self.조리중)-1)
-        주문번호, 메뉴 = self.조리중.pop(선택_인덱스)
+        choice_index = random.randint(0, len(self.Cooking)-1)
+        OrderNumber, menu = self.Cooking.pop(choice_index)
         
-        self.완료.append((주문번호, 메뉴))
-        print(f"[요리완료] 주문번호 {주문번호}: {메뉴} - 순서 위반 가능성 있음!")
+        self.finish.append((OrderNumber, menu))
+        print(f"[cookingfinish] OrderNumber {OrderNumber}: {menu} - here is possibility of Order Violation!!")
         return True
 
-# 시뮬레이션 실행
-def 시뮬레이션():
-    식당 = 식당시스템()
-    메뉴목록 = ["비빔밥", "김치찌개", "불고기", "된장찌개", "떡볶이"]
+
+def simulation():
+    restaurant = restaurant()
+    menuList = ["Bibimbap", "Kimchi Jjigae", "Bulgogi", "Doenjang Jjigae", "Tteokbokki"]
     
-    # 5개 주문 접수
-    for 메뉴 in 메뉴목록:
-        식당.주문접수(메뉴)
+    for menu in menuList:
+        restaurant.OrderRecieved(menu)
     
-    # 요리 과정 시뮬레이션
-    while 식당.주문목록 or 식당.조리중:
-        if 식당.주문목록 and random.random() < 0.7:
-            식당.요리시작()
-        if 식당.조리중 and random.random() < 0.5:
-            식당.요리완료()
+    while restaurant.OrderList or restaurant.Cooking:
+        if restaurant.OrderList and random.random() < 0.7:
+            restaurant.startCooking()
+        if restaurant.Cooking and random.random() < 0.5:
+            restaurant.cookingfinish()
         time.sleep(0.5)
     
-    print("\n최종 완료된 주문:")
-    for 번호, 메뉴 in 식당.완료:
-        print(f"주문번호 {번호}: {메뉴}")
+    print("\nfinal finished order:")
+    for Number, menu in restaurant.finish:
+        print(f"OrderNumber {Number}: {menu}")
 
-시뮬레이션()
+simulation()
